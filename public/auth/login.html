@@ -37,7 +37,6 @@
                     <strong>數位憑證皮夾 OIDC</strong>
                 </a>
 
-                <!-- 漢堡按鈕 -->
                 <a role="button" class="navbar-burger has-text-white" aria-label="menu" aria-expanded="false"
                     data-target="navbarMenu">
                     <span aria-hidden="true"></span>
@@ -48,14 +47,13 @@
 
             <div id="navbarMenu" class="navbar-menu">
                 <div class="navbar-start">
-                    <a href="/dashboard" class="navbar-item has-text-white">
-                        管理後台
-                    </a>
-                    <a href="/auth/register" class="navbar-item has-text-white">
-                        註冊電子信箱卡
+                    <a href="/dashboard" class="navbar-item has-text-white">管理後台</a>
+                    <a href="/auth/register" class="navbar-item has-text-white">註冊電子信箱卡</a>
+                    <a href="https://zeroflaretw.cloudflareaccess.com/cdn-cgi/access/test-idp/831091b2-3f95-4969-b1ef-873b8c546872"
+                        target="_blank" class="navbar-item has-text-white">
+                        測試登入 Cloudflare Access
                     </a>
                 </div>
-
                 <div class="navbar-end">
                     <div class="navbar-item">
                         <a href="https://github.com/zeroflare/twdiw-oidc" target="_blank"
@@ -71,7 +69,7 @@
             </div>
         </div>
     </nav>
-    <!-- 啟用漢堡選單切換 -->
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const $navbarBurgers = Array.from(document.querySelectorAll('.navbar-burger'));
@@ -93,11 +91,15 @@
                 <div class="column is-8-tablet is-6-desktop is-5-widescreen">
                     <div class="box has-text-centered">
                         <h1 class="title is-3 mb-3">數位憑證皮夾 OIDC 登入</h1>
+
                         <p class="subtitle is-6 has-text-grey">
                             請先註冊
                             <a href="/auth/register" target="_blank">電子信箱卡</a>，
                             並以 <strong>數位憑證皮夾 App</strong> 掃描驗證。
                         </p>
+
+                        <!-- 顯示登入目標 -->
+                        <p id="login-target" class="has-text-grey-dark mt-2" style="display:none;"></p>
 
                         <div class="qrcode-box">
                             <img id="qrcode" alt="QRCode 將顯示於此" />
@@ -121,6 +123,31 @@
     <!-- Script -->
     <script>
         let transactionId = crypto.randomUUID();
+
+        function showLoginTargetBelowHint() {
+            const el = document.getElementById('login-target');
+            if (!el) return;
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const raw = urlParams.get('redirect_uri');
+            if (!raw) return;
+
+            let redirect;
+            try {
+                const maybeDecoded = decodeURIComponent(raw);
+                redirect = new URL(maybeDecoded);
+            } catch {
+                try {
+                    redirect = new URL(raw);
+                } catch {
+                    return;
+                }
+            }
+
+            const host = redirect.hostname;
+            el.innerHTML = `🔐 你即將登入 <strong>${host}</strong>`;
+            el.style.display = '';
+        }
 
         async function getQrcode() {
             const res = await fetch(`/api/auth/login/qrcode?transactionId=${transactionId}`);
@@ -149,6 +176,7 @@
         }
 
         // 初始化流程
+        showLoginTargetBelowHint();
         getQrcode();
         setInterval(checkResult, 5 * 1000);
     </script>

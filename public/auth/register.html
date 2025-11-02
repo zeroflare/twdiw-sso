@@ -2,185 +2,193 @@
 <html lang="zh-Hant">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>電子信箱卡註冊 - 數位憑證皮夾 OIDC</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>電子信箱卡註冊 - 數位憑證皮夾 OIDC</title>
 
-  <!-- Bulma CSS -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
+    <!-- Bulma CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
 
-  <!-- SweetAlert2 -->
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-  <!-- jQuery (可選，若未用到可移除) -->
-  <script defer src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <!-- jQuery (可選，若未用到可移除) -->
+    <script defer src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
 </head>
 
 <body class="has-background-light" style="min-height:100vh; display:flex; flex-direction:column;">
 
-  <!-- Navbar -->
-  <nav class="navbar is-primary" role="navigation" aria-label="main navigation">
-    <div class="container">
-      <div class="navbar-brand">
-        <a class="navbar-item has-text-white" href="/">
-          <strong>數位憑證皮夾 OIDC</strong>
-        </a>
+    <!-- Navbar -->
+    <nav class="navbar is-primary" role="navigation" aria-label="main navigation">
+        <div class="container">
+            <div class="navbar-brand">
+                <a class="navbar-item has-text-white" href="/">
+                    <strong>數位憑證皮夾 OIDC</strong>
+                </a>
 
-        <!-- 漢堡按鈕 -->
-        <a role="button" class="navbar-burger has-text-white" aria-label="menu" aria-expanded="false" data-target="navbarMenu">
-          <span aria-hidden="true"></span>
-          <span aria-hidden="true"></span>
-          <span aria-hidden="true"></span>
-        </a>
-      </div>
+                <!-- 漢堡按鈕 -->
+                <a role="button" class="navbar-burger has-text-white" aria-label="menu" aria-expanded="false"
+                    data-target="navbarMenu">
+                    <span aria-hidden="true"></span>
+                    <span aria-hidden="true"></span>
+                    <span aria-hidden="true"></span>
+                </a>
+            </div>
 
-      <div id="navbarMenu" class="navbar-menu">
-        <div class="navbar-start">
-          <a href="/dashboard" class="navbar-item has-text-white">
-            管理後台
-          </a>
-          <a href="/auth/register" class="navbar-item has-text-white is-active">
-            註冊電子信箱卡
-          </a>
-        </div>
-
-        <div class="navbar-end">
-          <div class="navbar-item">
-            <a href="https://github.com/zeroflare/twdiw-oidc" target="_blank" class="button is-light is-small">
-              <span class="icon">
-                <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub"
-                  width="20" height="20">
-              </span>
-              <span>GitHub</span>
-            </a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </nav>
-
-  <!-- Navbar toggle script -->
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const $navbarBurgers = Array.from(document.querySelectorAll('.navbar-burger'));
-      $navbarBurgers.forEach(el => {
-        el.addEventListener('click', () => {
-          const target = el.dataset.target;
-          const $target = document.getElementById(target);
-          el.classList.toggle('is-active');
-          $target.classList.toggle('is-active');
-        });
-      });
-    });
-  </script>
-
-  <!-- Main Content -->
-  <section class="section is-flex-grow-1">
-    <div class="container">
-      <div class="columns is-centered">
-        <div class="column is-8-tablet is-6-desktop is-5-widescreen">
-          <div class="box">
-            <h1 class="title is-3 has-text-centered">電子信箱卡註冊</h1>
-
-            <form id="qrForm" class="mt-4">
-              <div class="field">
-                <label class="label" for="name">姓名</label>
-                <div class="control">
-                  <input class="input" type="text" id="name" name="name" placeholder="請輸入姓名" required>
+            <div id="navbarMenu" class="navbar-menu">
+                <div class="navbar-start">
+                    <a href="/dashboard" class="navbar-item has-text-white">
+                        管理後台
+                    </a>
+                    <a href="/auth/register" class="navbar-item has-text-white is-active">
+                        註冊電子信箱卡
+                    </a>
+                    <a href="https://zeroflaretw.cloudflareaccess.com/cdn-cgi/access/test-idp/831091b2-3f95-4969-b1ef-873b8c546872"
+                        target="_blank" class="navbar-item has-text-white">
+                        測試登入 Cloudflare Access
+                    </a>
                 </div>
-              </div>
 
-              <div class="field">
-                <label class="label" for="email">信箱</label>
-                <div class="control">
-                  <input class="input" type="email" id="email" name="email" placeholder="example@email.com" required>
+                <div class="navbar-end">
+                    <div class="navbar-item">
+                        <a href="https://github.com/zeroflare/twdiw-oidc" target="_blank"
+                            class="button is-light is-small">
+                            <span class="icon">
+                                <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg"
+                                    alt="GitHub" width="20" height="20">
+                            </span>
+                            <span>GitHub</span>
+                        </a>
+                    </div>
                 </div>
-              </div>
-
-              <div class="field mt-5 has-text-centered">
-                <button type="submit" id="generateBtn" class="button is-primary is-medium has-text-white">
-                  註冊
-                </button>
-              </div>
-            </form>
-          </div>
+            </div>
         </div>
-      </div>
-    </div>
-  </section>
+    </nav>
 
-  <!-- JS 邏輯 -->
-  <script>
-    document.getElementById('qrForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const name = document.getElementById('name').value.trim();
-      const email = document.getElementById('email').value.trim();
-
-      try {
-        const response = await fetch('/api/auth/register/qrcode', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ name, email })
+    <!-- Navbar toggle script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const $navbarBurgers = Array.from(document.querySelectorAll('.navbar-burger'));
+            $navbarBurgers.forEach(el => {
+                el.addEventListener('click', () => {
+                    const target = el.dataset.target;
+                    const $target = document.getElementById(target);
+                    el.classList.toggle('is-active');
+                    $target.classList.toggle('is-active');
+                });
+            });
         });
+    </script>
 
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error || '發生錯誤，請稍後再試');
-        }
+    <!-- Main Content -->
+    <section class="section is-flex-grow-1">
+        <div class="container">
+            <div class="columns is-centered">
+                <div class="column is-8-tablet is-6-desktop is-5-widescreen">
+                    <div class="box">
+                        <h1 class="title is-3 has-text-centered">電子信箱卡註冊</h1>
 
-        const data = await response.json();
-        const transactionId = data.transactionId;
-        let pollTimeout;
+                        <form id="qrForm" class="mt-4">
+                            <div class="field">
+                                <label class="label" for="name">姓名</label>
+                                <div class="control">
+                                    <input class="input" type="text" id="name" name="name" placeholder="請輸入姓名" required>
+                                </div>
+                            </div>
 
-        Swal.fire({
-          title: '開啟「數位憑證皮夾 App」掃描',
-          imageUrl: data.qrCode,
-          showCloseButton: true,
-          showConfirmButton: false,
-          allowOutsideClick: false,
-          html: `<p><a href="${data.deepLink}" target="_blank">打開數位憑證皮夾 App</a></p>`,
-          didOpen: () => {
-            checkCredentialStatus(transactionId);
-          },
-          willClose: () => {
-            if (pollTimeout) clearTimeout(pollTimeout);
-          }
-        });
+                            <div class="field">
+                                <label class="label" for="email">信箱</label>
+                                <div class="control">
+                                    <input class="input" type="email" id="email" name="email"
+                                        placeholder="example@email.com" required>
+                                </div>
+                            </div>
 
-        async function checkCredentialStatus(transactionId) {
-          try {
-            const response = await fetch(`/api/auth/register/result?transactionId=${transactionId}`);
-            if (response.status === 200) {
-              Swal.fire({
-                title: '註冊成功',
-                text: '您的數位憑證已成功註冊！',
-                icon: 'success',
-                confirmButtonText: '確定',
-                confirmButtonColor: '#4CAF50'
-              });
-            } else if (response.status === 400) {
-              pollTimeout = setTimeout(() => checkCredentialStatus(transactionId), 5000);
-            } else {
-              throw new Error('憑證驗證失敗');
+                            <div class="field mt-5 has-text-centered">
+                                <button type="submit" id="generateBtn"
+                                    class="button is-primary is-medium has-text-white">
+                                    註冊
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- JS 邏輯 -->
+    <script>
+        document.getElementById('qrForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+
+            try {
+                const response = await fetch('/api/auth/register/qrcode', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name, email })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || '發生錯誤，請稍後再試');
+                }
+
+                const data = await response.json();
+                const transactionId = data.transactionId;
+                let pollTimeout;
+
+                Swal.fire({
+                    title: '開啟「數位憑證皮夾 App」掃描',
+                    imageUrl: data.qrCode,
+                    showCloseButton: true,
+                    showConfirmButton: false,
+                    allowOutsideClick: false,
+                    html: `<p><a href="${data.deepLink}" target="_blank">打開數位憑證皮夾 App</a></p>`,
+                    didOpen: () => {
+                        checkCredentialStatus(transactionId);
+                    },
+                    willClose: () => {
+                        if (pollTimeout) clearTimeout(pollTimeout);
+                    }
+                });
+
+                async function checkCredentialStatus(transactionId) {
+                    try {
+                        const response = await fetch(`/api/auth/register/result?transactionId=${transactionId}`);
+                        if (response.status === 200) {
+                            Swal.fire({
+                                title: '註冊成功',
+                                text: '您的數位憑證已成功註冊！',
+                                icon: 'success',
+                                confirmButtonText: '確定',
+                                confirmButtonColor: '#4CAF50'
+                            });
+                        } else if (response.status === 400) {
+                            pollTimeout = setTimeout(() => checkCredentialStatus(transactionId), 5000);
+                        } else {
+                            throw new Error('憑證驗證失敗');
+                        }
+                    } catch (error) {
+                        console.error('輪詢錯誤:', error);
+                    }
+                }
+            } catch (error) {
+                Swal.fire({
+                    title: '錯誤',
+                    text: error.message,
+                    icon: 'error',
+                    confirmButtonText: '確定',
+                    confirmButtonColor: '#e74c3c'
+                });
             }
-          } catch (error) {
-            console.error('輪詢錯誤:', error);
-          }
-        }
-      } catch (error) {
-        Swal.fire({
-          title: '錯誤',
-          text: error.message,
-          icon: 'error',
-          confirmButtonText: '確定',
-          confirmButtonColor: '#e74c3c'
         });
-      }
-    });
-  </script>
+    </script>
 
 </body>
 
