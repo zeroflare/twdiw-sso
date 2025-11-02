@@ -149,48 +149,50 @@
     <script>
         (async () => {
             try {
+                // 驗證登入狀態
                 const response = await fetch('/api/auth/me');
                 if (!response.ok) throw new Error('Not authenticated');
                 const user = await response.json();
                 console.log('Logged in as:', user);
-            } catch (error) {
-                console.error('Authentication check failed, redirecting to /');
-                window.location.href = '/auth/login?redirect_uri=/dashboard';
-                return;
-            }
 
-            const baseUrl = window.location.origin;
-            document.querySelectorAll('.baseurl').forEach(el => {
-                el.textContent = baseUrl + el.textContent;
-            });
+                // 只有成功驗證後，才繼續執行以下內容
+                const baseUrl = window.location.origin;
+                document.querySelectorAll('.baseurl').forEach(el => {
+                    el.textContent = baseUrl + el.textContent;
+                });
 
-            // 初始化 DataTable
-            const table = new DataTable('#clientsTable', {
-                ajax: { url: '/api/clients', dataSrc: '' },
-                columns: [
-                    { data: 'name' },
-                    { data: 'client_id' },
-                    { data: 'client_secret' },
-                    { data: 'redirect_uris' },
-                    {
-                        data: null,
-                        render: (data, type, row) => `
+                // 初始化 DataTable
+                const table = new DataTable('#clientsTable', {
+                    ajax: { url: '/api/clients', dataSrc: '' },
+                    columns: [
+                        { data: 'name' },
+                        { data: 'client_id' },
+                        { data: 'client_secret' },
+                        { data: 'redirect_uris' },
+                        {
+                            data: null,
+                            render: (data, type, row) => `
             <div class="buttons are-small">
               <button class="doedit button is-light" data-id="${row.id}">編輯</button>
               <button class="dodelete button is-light" data-id="${row.id}">刪除</button>
             </div>
           `
+                        }
+                    ],
+                    paging: false,
+                    searching: false,
+                    info: false,
+                    ordering: false,
+                    language: {
+                        url: 'https://cdn.datatables.net/plug-ins/2.0.3/i18n/zh-HANT.json'
                     }
-                ],
-                paging: false,
-                searching: false,
-                info: false,
-                ordering: false,
-                language: {
-                    url: 'https://cdn.datatables.net/plug-ins/2.0.3/i18n/zh-HANT.json'
-                }
-            });
+                });
 
+            } catch (error) {
+                // 驗證失敗 → 跳轉登入頁
+                console.error('Authentication check failed, redirecting to /');
+                window.location.href = '/auth/login?redirect_uri=/dashboard';
+            }
         })();
 
 
