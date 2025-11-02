@@ -47,8 +47,11 @@ export class AuthController {
       body: JSON.stringify({ transactionId }),
     });
 
+    const text = await res.text();
+    console.log(text);
+
     if (res.ok) {
-      const data = (await res.json()) as any;
+      const data = JSON.parse(text);
 
       const email = data.data[0].claims.find(
         (c: any) => c.ename === "email"
