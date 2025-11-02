@@ -33,60 +33,72 @@ export class AuthController {
   }
 
   static async loginResult(c: Context) {
-    const { env, req } = c;
-    const apiUrl = env.TWDIW_VP_URL;
-    const transactionId = req.query("transactionId");
+    try {
+      const { env, req } = c;
+      const apiUrl = env.TWDIW_VP_URL;
+      const transactionId = req.query("transactionId");
 
-    const url = `${apiUrl}/api/oidvp/result`;
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Token": env.TWDIW_VP_TOKEN,
-      },
-      body: JSON.stringify({ transactionId }),
-    });
-
-    const text = await res.text();
-    console.log(text);
-
-    if (res.ok) {
-      const data = JSON.parse(text);
-
-      const email = data.data[0].claims.find(
-        (c: any) => c.ename === "email"
-      )?.value;
-      const name = data.data[0].claims.find(
-        (c: any) => c.ename === "name"
-      )?.value;
-
-      const payload = {
-        email,
-        name,
-        exp: Math.floor(Date.now() / 1000) + 60 * 60,
-        iat: Math.floor(Date.now() / 1000),
-      };
-
-      const keyJson = JSON.parse(atob(env.PRIVATE_KEY));
-      const jwt = await sign(payload, keyJson, "RS256");
-
-      setCookie(c, "jwt", jwt, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "Lax",
-        path: "/",
-        maxAge: 60 * 60,
+      const url = `${apiUrl}/api/oidvp/result`;
+      console.log(url);
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Token": env.TWDIW_VP_TOKEN,
+        },
+        body: JSON.stringify({ transactionId }),
       });
 
-      const code = crypto.randomUUID();
-      await env.CODE_KV.put(code, JSON.stringify(payload), {
-        expirationTtl: 60,
-      });
-      return c.json({ code });
-    } else {
+
+      const text = await res.text();
+      console.log(text);
+
+      if (res.ok) {
+        const data = JSON.parse(text);
+
+        const email = data.data[0].claims.find(
+          (c: any) => c.ename === "email"
+        )?.value;
+        const name = data.data[0].claims.find(
+          (c: any) => c.ename === "name"
+        )?.value;
+
+        const payload = {
+          email,
+          name,
+          exp: Math.floor(Date.now() / 1000) + 60 * 60,
+          iat: Math.floor(Date.now() / 1000),
+        };
+
+        const keyJson = JSON.parse(atob(env.PRIVATE_KEY));
+        const jwt = await sign(payload, keyJson, "RS256");
+
+        setCookie(c, "jwt", jwt, {
+          httpOnly: true,
+          secure: true,
+          sameSite: "Lax",
+          path: "/",
+          maxAge: 60 * 60,
+        });
+
+        const code = crypto.randomUUID();
+        await env.CODE_KV.put(code, JSON.stringify(payload), {
+          expirationTtl: 60,
+        });
+        return c.json({ code });
+      } else {
+        return c.json(
+          {
+            message: "等待驗證",
+          },
+          400
+        );
+      }
+    } catch (error) {
+      console.error(error);
       return c.json(
         {
-          message: "等待驗證",
+          message: "發生錯誤",
         },
         500
       );
@@ -159,9 +171,8 @@ export class AuthController {
   static async logout(c: Context) {
     deleteCookie(c, "jwt");
     return c.json({ success: true });
-    
   }
-  
+
   static async me(c: Context) {
     const user = c.get("user");
     if (!user) {
