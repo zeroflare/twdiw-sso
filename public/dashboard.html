@@ -46,7 +46,8 @@
                     <a href="/auth/register" class="navbar-item has-text-white">
                         註冊電子信箱卡
                     </a>
-                    <a href="https://zeroflaretw.cloudflareaccess.com/cdn-cgi/access/test-idp/831091b2-3f95-4969-b1ef-873b8c546872" target="_blank" class="navbar-item has-text-white">
+                    <a href="https://zeroflaretw.cloudflareaccess.com/cdn-cgi/access/test-idp/831091b2-3f95-4969-b1ef-873b8c546872"
+                        target="_blank" class="navbar-item has-text-white">
                         測試登入 Cloudflare Access
                     </a>
                 </div>
@@ -191,19 +192,12 @@
                     }
                 });
 
-            } catch (error) {
-                // 驗證失敗 → 跳轉登入頁
-                console.error('Authentication check failed, redirecting to /');
-                window.location.href = '/auth/login?redirect_uri=/dashboard';
-            }
-        })();
 
-
-        // 新增 Client
-        document.getElementById('addBtn').addEventListener('click', async () => {
-            const { value: formValues } = await Swal.fire({
-                title: '新增 Client',
-                html: `
+                // 新增 Client
+                document.getElementById('addBtn').addEventListener('click', async () => {
+                    const { value: formValues } = await Swal.fire({
+                        title: '新增 Client',
+                        html: `
           <div style="text-align:left;">
             <div class="field">
               <label class="label">Client 名稱</label>
@@ -219,43 +213,43 @@ https://example.org/redirect" required></textarea>
               </div>
             </div>
           </div>`,
-                focusConfirm: false,
-                showCloseButton: true,
-                confirmButtonText: '新增',
-                preConfirm: () => ({
-                    name: document.getElementById('swal-name').value.trim(),
-                    redirect_uris: document.getElementById('swal-redirect_uris').value.trim()
-                })
-            });
+                        focusConfirm: false,
+                        showCloseButton: true,
+                        confirmButtonText: '新增',
+                        preConfirm: () => ({
+                            name: document.getElementById('swal-name').value.trim(),
+                            redirect_uris: document.getElementById('swal-redirect_uris').value.trim()
+                        })
+                    });
 
-            if (formValues) {
-                const res = await fetch('/api/clients', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formValues)
+                    if (formValues) {
+                        const res = await fetch('/api/clients', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(formValues)
+                        });
+                        if (res.ok) {
+                            Swal.fire('成功', 'Client 已新增', 'success');
+                            table.ajax.reload();
+                        } else {
+                            Swal.fire('錯誤', '新增失敗', 'error');
+                        }
+                    }
                 });
-                if (res.ok) {
-                    Swal.fire('成功', 'Client 已新增', 'success');
-                    table.ajax.reload();
-                } else {
-                    Swal.fire('錯誤', '新增失敗', 'error');
-                }
-            }
-        });
 
-        // 編輯與刪除事件
-        document.querySelector('#clientsTable tbody').addEventListener('click', async (e) => {
-            const id = e.target.dataset.id;
-            if (!id) return;
+                // 編輯與刪除事件
+                document.querySelector('#clientsTable tbody').addEventListener('click', async (e) => {
+                    const id = e.target.dataset.id;
+                    if (!id) return;
 
-            // 編輯
-            if (e.target.classList.contains('doedit')) {
-                const res = await fetch(`/api/clients/${id}`);
-                const client = await res.json();
+                    // 編輯
+                    if (e.target.classList.contains('doedit')) {
+                        const res = await fetch(`/api/clients/${id}`);
+                        const client = await res.json();
 
-                const { value: formValues } = await Swal.fire({
-                    title: '編輯 Client',
-                    html: `
+                        const { value: formValues } = await Swal.fire({
+                            title: '編輯 Client',
+                            html: `
             <div style="text-align:left;">
               <div class="field">
                 <label class="label">Client 名稱</label>
@@ -270,50 +264,59 @@ https://example.org/redirect" required></textarea>
                 </div>
               </div>
             </div>`,
-                    focusConfirm: false,
-                    confirmButtonText: '更新',
-                    preConfirm: () => ({
-                        name: document.getElementById('swal-name').value.trim(),
-                        redirect_uris: document.getElementById('swal-redirect_uris').value.trim()
-                    })
+                            focusConfirm: false,
+                            confirmButtonText: '更新',
+                            preConfirm: () => ({
+                                name: document.getElementById('swal-name').value.trim(),
+                                redirect_uris: document.getElementById('swal-redirect_uris').value.trim()
+                            })
+                        });
+
+                        if (formValues) {
+                            const update = await fetch(`/api/clients/${id}`, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(formValues)
+                            });
+                            if (update.ok) {
+                                Swal.fire('成功', 'Client 已更新', 'success');
+                                table.ajax.reload();
+                            } else {
+                                Swal.fire('錯誤', '更新失敗', 'error');
+                            }
+                        }
+                    }
+
+                    // 刪除
+                    if (e.target.classList.contains('dodelete')) {
+                        const confirm = await Swal.fire({
+                            title: '確認刪除？',
+                            text: '此操作無法復原',
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonText: '刪除',
+                            cancelButtonText: '取消'
+                        });
+                        if (confirm.isConfirmed) {
+                            const res = await fetch(`/api/clients/${id}`, { method: 'DELETE' });
+                            if (res.ok) {
+                                Swal.fire('已刪除', '', 'success');
+                                table.ajax.reload();
+                            } else {
+                                Swal.fire('錯誤', '刪除失敗', 'error');
+                            }
+                        }
+                    }
                 });
 
-                if (formValues) {
-                    const update = await fetch(`/api/clients/${id}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(formValues)
-                    });
-                    if (update.ok) {
-                        Swal.fire('成功', 'Client 已更新', 'success');
-                        table.ajax.reload();
-                    } else {
-                        Swal.fire('錯誤', '更新失敗', 'error');
-                    }
-                }
+            } catch (error) {
+                // 驗證失敗 → 跳轉登入頁
+                console.error('Authentication check failed, redirecting to /');
+                window.location.href = '/auth/login?redirect_uri=/dashboard';
             }
+        })();
 
-            // 刪除
-            if (e.target.classList.contains('dodelete')) {
-                const confirm = await Swal.fire({
-                    title: '確認刪除？',
-                    text: '此操作無法復原',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: '刪除',
-                    cancelButtonText: '取消'
-                });
-                if (confirm.isConfirmed) {
-                    const res = await fetch(`/api/clients/${id}`, { method: 'DELETE' });
-                    if (res.ok) {
-                        Swal.fire('已刪除', '', 'success');
-                        table.ajax.reload();
-                    } else {
-                        Swal.fire('錯誤', '刪除失敗', 'error');
-                    }
-                }
-            }
-        });
+
     </script>
 
 </body>
