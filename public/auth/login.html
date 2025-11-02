@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>數位憑證皮夾 OIDC 登入</title>
+
+    <!-- Bulma -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css" />
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .qrcode-box img {
+            max-width: 200px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+
+<body class="has-background-light">
+
+    <nav class="navbar is-primary" role="navigation" aria-label="main navigation">
+        <div class="container">
+            <div class="navbar-brand">
+                <a class="navbar-item has-text-white" href="/">
+                    <strong>數位憑證皮夾 OIDC</strong>
+                </a>
+
+                <!-- 漢堡按鈕 -->
+                <a role="button" class="navbar-burger has-text-white" aria-label="menu" aria-expanded="false"
+                    data-target="navbarMenu">
+                    <span aria-hidden="true"></span>
+                    <span aria-hidden="true"></span>
+                    <span aria-hidden="true"></span>
+                </a>
+            </div>
+
+            <div id="navbarMenu" class="navbar-menu">
+                <div class="navbar-start">
+                    <a href="/dashboard" class="navbar-item has-text-white">
+                        管理後台
+                    </a>
+                    <a href="/auth/register" class="navbar-item has-text-white">
+                        註冊電子信箱卡
+                    </a>
+                </div>
+
+                <div class="navbar-end">
+                    <div class="navbar-item">
+                        <a href="https://github.com/zeroflare/twdiw-oidc" target="_blank"
+                            class="button is-light is-small">
+                            <span class="icon">
+                                <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg"
+                                    alt="GitHub" width="20" height="20">
+                            </span>
+                            <span>GitHub</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <!-- 啟用漢堡選單切換 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const $navbarBurgers = Array.from(document.querySelectorAll('.navbar-burger'));
+            $navbarBurgers.forEach(el => {
+                el.addEventListener('click', () => {
+                    const target = el.dataset.target;
+                    const $target = document.getElementById(target);
+                    el.classList.toggle('is-active');
+                    $target.classList.toggle('is-active');
+                });
+            });
+        });
+    </script>
+
+    <!-- Main content -->
+    <section class="section is-flex-grow-1">
+        <div class="container">
+            <div class="columns is-centered">
+                <div class="column is-8-tablet is-6-desktop is-5-widescreen">
+                    <div class="box has-text-centered">
+                        <h1 class="title is-3 mb-3">數位憑證皮夾 OIDC 登入</h1>
+                        <p class="subtitle is-6 has-text-grey">
+                            請先註冊
+                            <a href="/auth/register" target="_blank">電子信箱卡</a>，
+                            並以 <strong>數位憑證皮夾 App</strong> 掃描驗證。
+                        </p>
+
+                        <div class="qrcode-box">
+                            <img id="qrcode" alt="QRCode 將顯示於此" />
+                        </div>
+
+                        <div class="mt-4">
+                            <a href="#" id="authUri" class="button is-light is-medium">
+                                開啟數位皮夾 App 驗證
+                            </a>
+                        </div>
+
+                        <p class="is-size-7 has-text-grey mt-5">
+                            若無法開啟 App，請掃描上方 QRCode 進行登入。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Script -->
+    <script>
+        let transactionId = crypto.randomUUID();
+
+        async function getQrcode() {
+            const res = await fetch(`/api/auth/login/qrcode?transactionId=${transactionId}`);
+            if (!res.ok) {
+                Swal.fire("❌ 無法取得 QRCode", `狀態碼 ${res.status}`, "error");
+                return;
+            }
+            const data = await res.json();
+            document.getElementById("qrcode").src = data.qrcodeImage;
+            document.getElementById("authUri").href = data.authUri;
+            console.log("QRCode 已生成:", data);
+        }
+
+        async function checkResult() {
+            const res = await fetch(`/api/auth/login/result?transactionId=${transactionId}`);
+            if (res.status === 200) {
+                const result = await res.json();
+                const code = result.code;
+                const urlParams = new URLSearchParams(window.location.search);
+                const state = urlParams.get('state');
+                const redirect_uri = urlParams.get('redirect_uri');
+                window.location.href = `${redirect_uri}?code=${code}&state=${state}`;
+            } else {
+                console.log(`尚未有結果 (${res.status})，稍後再試`);
+            }
+        }
+
+        // 初始化流程
+        getQrcode();
+        setInterval(checkResult, 5 * 1000);
+    </script>
+</body>
+
+</html>

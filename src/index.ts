@@ -1,48 +1,44 @@
-import { Hono } from 'hono';
-import { oauthRouter } from './routes/oauth.routes';
+import { Hono } from "hono";
+import { authRouter } from "./routes/auth.routes";
+import { oidcRouter } from "./routes/oidc.routes";  // Add this import
+import { initRouter } from "./routes/init.routes";
+import { clientsRouter } from "./routes/clients.routes";
+
 import { Context } from "hono";
+import { verify } from "hono/jwt";
+import { getCookie, setCookie, deleteCookie } from "hono/cookie";
 
 const app = new Hono<{ Bindings: CloudflareBindings }>();
 
-// API Routes
-const api = new Hono();
-api.route('/oauth', oauthRouter);
-// Mount API under /api
-app.route('/api', api);
-
-// Health check endpoint
-app.get('/', (c) => {
-  return c.text('OIDC Server is running');
+// Add this before your routes
+app.use("*", async (c: Context, next) => {
+  try {
+    const token = getCookie(c, "jwt");
+    if (token) {
+      const keyJson = JSON.parse(atob(c.env.PUBLIC_KEY));
+      const payload = await verify(token, keyJson, "RS256");
+      c.set("user", {
+        email: payload.email,
+        name: payload.name,
+      });
+    }
+  } catch (error) {
+    console.error(error);
+  }
+  return next();
 });
 
-app.get('/init-db', async (c: Context) => {
-  const env = c.env
 
-  // 檢查 clients 表是否存在
-  const result = await env.DB.prepare(`
-    SELECT name FROM sqlite_master WHERE type='table' AND name='clients';
-  `).first();
 
-  if (result) {
-    return c.text('✅ Table "clients" already exists.');
-  }
+// API Routes
+const api = new Hono();
+api.route("/auth", authRouter);
+api.route("/clients", clientsRouter);
+api.route("/oidc", oidcRouter);
+api.route("/init", initRouter);
+// Mount API under /api
+app.route("/api", api);
 
-  // 建立 clients 表
-  await env.DB.prepare(`
-    CREATE TABLE IF NOT EXISTS clients (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_email TEXT NOT NULL,
-      client_id TEXT NOT NULL UNIQUE,
-      client_secret TEXT,
-      name TEXT,
-      redirect_uris TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
-  `).run();
-
-  return c.text('✅ Table "clients" created successfully.')
-})
 
 
 export default app;

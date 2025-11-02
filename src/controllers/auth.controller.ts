@@ -2,74 +2,7 @@ import { Context } from "hono";
 import { getCookie, setCookie, deleteCookie } from "hono/cookie";
 import { sign } from "hono/jwt";
 
-export class OAuthController {
-  static async token(c: Context) {
-    const { env, req } = c;
-
-    const formData = await req.formData();
-    const code = formData.get("code");
-
-    const raw = await c.env.CODE_KV.get(code);
-    if (!raw) {
-      return c.json({ error: "CODE 已過期或不存在" }, 401);
-    }
-
-    // 取出 name 和 email
-    const data = JSON.parse(raw);
-    const name = data.name;
-    const email = data.email;
-
-    const keyJson = JSON.parse(atob(env.OIDC_KEY));
-
-    const payload = {
-      email,
-      name,
-      exp: Math.floor(Date.now() / 1000) + 60 * 60,
-      iat: Math.floor(Date.now() / 1000),
-    };
-
-    const jwt = await sign(payload, keyJson, "RS256");
-    console.log(jwt);
-    return c.json({ id_token: jwt });
-  }
-
-  static async jwks(c: Context) {
-    try {
-      const { env } = c;
-      const oidcKeyBase64 = env.OIDC_KEY;
-
-      if (!oidcKeyBase64) {
-        throw new Error("OIDC_KEY not configured in environment");
-      }
-
-      // Decode base64 to string in a Cloudflare Workers compatible way
-      const keyStr = atob(oidcKeyBase64);
-      const keyJson = JSON.parse(keyStr);
-
-      // Extract public key components
-      const { e, n, kty } = keyJson;
-
-      // Create the JWKS response with only public key components
-      const jwks = {
-        keys: [
-          {
-            kty,
-            n,
-            e,
-            kid: "1",
-            use: "sig",
-            alg: "RS256",
-          },
-        ],
-      };
-
-      return c.json(jwks);
-    } catch (error) {
-      console.error("Error generating JWKS:", error);
-      return c.json({ error: "Failed to generate JWKS" }, 500);
-    }
-  }
-
+export class AuthController {
   static async loginQrcode(c: Context) {
     const { env } = c;
     const apiUrl = env.TWDIW_VP_URL;
@@ -131,7 +64,7 @@ export class OAuthController {
         iat: Math.floor(Date.now() / 1000),
       };
 
-      const keyJson = JSON.parse(atob(env.OIDC_KEY));
+      const keyJson = JSON.parse(atob(env.PRIVATE_KEY));
       const jwt = await sign(payload, keyJson, "RS256");
 
       setCookie(c, "jwt", jwt, {
@@ -218,5 +151,19 @@ export class OAuthController {
         400
       );
     }
+  }
+
+  static async logout(c: Context) {
+    deleteCookie(c, "jwt");
+    return c.json({ success: true });
+    
+  }
+  
+  static async me(c: Context) {
+    const user = c.get("user");
+    if (!user) {
+      return c.json({ error: "Not logged in" }, 401);
+    }
+    return c.json(user);
   }
 }
