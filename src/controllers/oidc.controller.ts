@@ -6,7 +6,7 @@ export class OIDCController {
     const { env, req } = c;
 
     const formData = await req.formData();
-    console.log(formData);
+    console.log(Object.fromEntries(formData));
     const code = formData.get("code");
 
     const raw = await c.env.CODE_KV.get(code as string);
