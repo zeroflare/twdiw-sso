@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { authRouter } from "./routes/auth.routes";
-import { oidcRouter } from "./routes/oidc.routes";  // Add this import
+import { oidcRouter } from "./routes/oidc.routes"; // Add this import
 import { initRouter } from "./routes/init.routes";
 import { clientsRouter } from "./routes/clients.routes";
 
@@ -28,8 +28,6 @@ app.use("*", async (c: Context, next) => {
   return next();
 });
 
-
-
 // API Routes
 const api = new Hono();
 api.route("/auth", authRouter);
@@ -39,6 +37,22 @@ api.route("/init", initRouter);
 // Mount API under /api
 app.route("/api", api);
 
+app.get("/.well-known/openid-configuration", (c: Context) => {
+  const url = new URL(c.req.url);
+  const baseUrl = `${url.protocol}//${url.host}`;
 
+  return c.json({
+    issuer: baseUrl,
+    authorization_endpoint: `${baseUrl}/auth/login`,
+    token_endpoint: `${baseUrl}/api/oidc/token`,
+    jwks_uri: `${baseUrl}/api/oidc/jwks`,
+    response_types_supported: ["code"],
+    subject_types_supported: ["public"],
+    id_token_signing_alg_values_supported: ["RS256"],
+    scopes_supported: ["openid", "email", "profile"],
+    token_endpoint_auth_methods_supported: ["client_secret_basic"],
+    claims_supported: ["email", "name"],
+  });
+});
 
 export default app;
