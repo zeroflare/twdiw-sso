@@ -1,7 +1,7 @@
 import { Context } from "hono";
+
 interface CloudflareBindings {
   DB: D1Database;
-  // Add other bindings here if needed
 }
 
 export const createClient = async (c: Context) => {
@@ -30,11 +30,20 @@ export const createClient = async (c: Context) => {
   }
 };
 
-export const getClients = async (
-  c: Context<{ Bindings: CloudflareBindings }>
-) => {
+export const getClients = async (c: Context) => {
+  const user = c.get("user");
+  if (!user) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  const user_email = user.email;
+
   try {
-    const { results } = await c.env.DB.prepare("SELECT * FROM clients").all();
+    const { results } = await c.env.DB.prepare(
+      "SELECT * FROM clients WHERE user_email = ?"
+    )
+      .bind(user_email)
+      .all();
 
     return c.json(results || []);
   } catch (error) {
@@ -43,18 +52,24 @@ export const getClients = async (
   }
 };
 
-export const getClientById = async (
-  c: Context<{ Bindings: CloudflareBindings }>
-) => {
+export const getClientById = async (c: Context) => {
+  const user = c.get("user");
+  if (!user) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  const user_email = user.email;
   const id = c.req.param("id");
 
   try {
-    const client = await c.env.DB.prepare("SELECT * FROM clients WHERE id = ?")
-      .bind(id)
+    const client = await c.env.DB.prepare(
+      "SELECT * FROM clients WHERE id = ? AND user_email = ?"
+    )
+      .bind(id, user_email)
       .first();
 
     if (!client) {
-      return c.json({ error: "Client not found" }, 404);
+      return c.json({ error: "Client not found or not owned by you" }, 404);
     }
 
     return c.json(client);
@@ -64,20 +79,34 @@ export const getClientById = async (
   }
 };
 
-export const updateClient = async (
-  c: Context<{ Bindings: CloudflareBindings }>
-) => {
+export const updateClient = async (c: Context) => {
+  const user = c.get("user");
+  if (!user) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  const user_email = user.email;
   const id = c.req.param("id");
-  const { name, redirect_uris } =
-    await c.req.json();
+  const { name, redirect_uris } = await c.req.json();
 
   try {
+    // 先確認這筆 client 是否屬於該使用者
+    const client = await c.env.DB.prepare(
+      "SELECT * FROM clients WHERE id = ? AND user_email = ?"
+    )
+      .bind(id, user_email)
+      .first();
+
+    if (!client) {
+      return c.json({ error: "Client not found or not owned by you" }, 403);
+    }
+
     await c.env.DB.prepare(
       `UPDATE clients 
        SET name = ?, redirect_uris = ?, updated_at = CURRENT_TIMESTAMP
-       WHERE id = ?`
+       WHERE id = ? AND user_email = ?`
     )
-      .bind(name, redirect_uris, id)
+      .bind(name, redirect_uris, id, user_email)
       .run();
 
     return c.json({ success: true });
@@ -87,13 +116,32 @@ export const updateClient = async (
   }
 };
 
-export const deleteClient = async (
-  c: Context<{ Bindings: CloudflareBindings }>
-) => {
+export const deleteClient = async (c: Context) => {
+  const user = c.get("user");
+  if (!user) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  const user_email = user.email;
   const id = c.req.param("id");
 
   try {
-    await c.env.DB.prepare("DELETE FROM clients WHERE id = ?").bind(id).run();
+    // 同樣先確認所有權
+    const client = await c.env.DB.prepare(
+      "SELECT * FROM clients WHERE id = ? AND user_email = ?"
+    )
+      .bind(id, user_email)
+      .first();
+
+    if (!client) {
+      return c.json({ error: "Client not found or not owned by you" }, 403);
+    }
+
+    await c.env.DB.prepare(
+      "DELETE FROM clients WHERE id = ? AND user_email = ?"
+    )
+      .bind(id, user_email)
+      .run();
 
     return c.json({ success: true });
   } catch (error) {
