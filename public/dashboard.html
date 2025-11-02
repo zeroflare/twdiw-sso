@@ -2,201 +2,203 @@
 <html lang="zh-Hant">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>TWDIW OIDC Client 管理</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TWDIW OIDC Client 管理</title>
 
-  <!-- Bulma -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
+    <!-- Bulma -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
 
-  <!-- DataTables -->
-  <link rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/datatables.net-dt@2.3.4/css/dataTables.dataTables.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/datatables.net@2.3.4/js/dataTables.min.js"></script>
+    <!-- DataTables -->
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/datatables.net-dt@2.3.4/css/dataTables.dataTables.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/datatables.net@2.3.4/js/dataTables.min.js"></script>
 
-  <!-- SweetAlert2 -->
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.12.4/dist/sweetalert2.all.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.12.4/dist/sweetalert2.all.min.js"></script>
 
 </head>
 
 <body class="has-background-light" style="min-height:100vh; display:flex; flex-direction:column;">
 
-  <nav class="navbar is-primary" role="navigation" aria-label="main navigation">
-    <div class="container">
-      <div class="navbar-brand">
-        <a class="navbar-item has-text-white" href="/">
-          <strong>數位憑證皮夾 OIDC</strong>
-        </a>
+    <nav class="navbar is-primary" role="navigation" aria-label="main navigation">
+        <div class="container">
+            <div class="navbar-brand">
+                <a class="navbar-item has-text-white" href="/">
+                    <strong>數位憑證皮夾 OIDC</strong>
+                </a>
 
-        <!-- 漢堡按鈕 -->
-        <a role="button" class="navbar-burger has-text-white" aria-label="menu" aria-expanded="false"
-          data-target="navbarMenu">
-          <span aria-hidden="true"></span>
-          <span aria-hidden="true"></span>
-          <span aria-hidden="true"></span>
-        </a>
-      </div>
+                <!-- 漢堡按鈕 -->
+                <a role="button" class="navbar-burger has-text-white" aria-label="menu" aria-expanded="false"
+                    data-target="navbarMenu">
+                    <span aria-hidden="true"></span>
+                    <span aria-hidden="true"></span>
+                    <span aria-hidden="true"></span>
+                </a>
+            </div>
 
-      <div id="navbarMenu" class="navbar-menu">
-        <div class="navbar-start">
-          <a href="/dashboard" class="navbar-item has-text-white is-active">
-            管理後台
-          </a>
-          <a href="/auth/register" class="navbar-item has-text-white">
-            註冊電子信箱卡
-          </a>
+            <div id="navbarMenu" class="navbar-menu">
+                <div class="navbar-start">
+                    <a href="/dashboard" class="navbar-item has-text-white is-active">
+                        管理後台
+                    </a>
+                    <a href="/auth/register" class="navbar-item has-text-white">
+                        註冊電子信箱卡
+                    </a>
+                </div>
+
+                <div class="navbar-end">
+                    <div class="navbar-item">
+                        <a href="https://github.com/zeroflare/twdiw-oidc" target="_blank"
+                            class="button is-light is-small mr-2">
+                            <span class="icon">
+                                <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg"
+                                    alt="GitHub" width="20" height="20">
+                            </span>
+                            <span>GitHub</span>
+                        </a>
+                        <!-- 🔹 改為 JS 登出 -->
+                        <button id="logoutBtn" class="button is-light is-small">登出</button>
+                    </div>
+                </div>
+            </div>
         </div>
+    </nav>
 
-        <div class="navbar-end">
-          <div class="navbar-item">
-            <a href="https://github.com/zeroflare/twdiw-oidc" target="_blank"
-              class="button is-light is-small mr-2">
-              <span class="icon">
-                <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg"
-                  alt="GitHub" width="20" height="20">
-              </span>
-              <span>GitHub</span>
-            </a>
-            <!-- 🔹 改為 JS 登出 -->
-            <button id="logoutBtn" class="button is-light is-small">登出</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </nav>
-
-  <!-- Navbar toggle -->
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const $navbarBurgers = Array.from(document.querySelectorAll('.navbar-burger'));
-      $navbarBurgers.forEach(el => {
-        el.addEventListener('click', () => {
-          const target = el.dataset.target;
-          const $target = document.getElementById(target);
-          el.classList.toggle('is-active');
-          $target.classList.toggle('is-active');
-        });
-      });
-
-      // 🔹 登出功能
-      const logoutBtn = document.getElementById('logoutBtn');
-      logoutBtn.addEventListener('click', async () => {
-        try {
-          const res = await fetch('/api/auth/logout');
-          if (res.ok) {
-            Swal.fire({
-              title: '已登出',
-              text: '您已成功登出。',
-              icon: 'success',
-              confirmButtonText: '返回首頁',
-              confirmButtonColor: '#3273dc'
-            }).then(() => {
-              window.location.href = '/';
+    <!-- Navbar toggle -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const $navbarBurgers = Array.from(document.querySelectorAll('.navbar-burger'));
+            $navbarBurgers.forEach(el => {
+                el.addEventListener('click', () => {
+                    const target = el.dataset.target;
+                    const $target = document.getElementById(target);
+                    el.classList.toggle('is-active');
+                    $target.classList.toggle('is-active');
+                });
             });
-          } else {
-            throw new Error('登出失敗');
-          }
-        } catch (error) {
-          Swal.fire({
-            title: '錯誤',
-            text: error.message || '登出時發生問題',
-            icon: 'error',
-            confirmButtonText: '確定'
-          });
-        }
-      });
-    });
-  </script>
 
-  <!-- Main Section -->
-  <section class="section is-flex-grow-1">
-    <div class="container">
-      <div class="box">
-        <h1 class="title is-3 mb-4 has-text-centered">OIDC Client 管理</h1>
+            // 🔹 登出功能
+            const logoutBtn = document.getElementById('logoutBtn');
+            logoutBtn.addEventListener('click', async () => {
+                try {
+                    const res = await fetch('/api/auth/logout');
+                    if (res.ok) {
+                        Swal.fire({
+                            title: '已登出',
+                            text: '您已成功登出。',
+                            icon: 'success',
+                            confirmButtonText: '返回首頁',
+                            confirmButtonColor: '#3273dc'
+                        }).then(() => {
+                            window.location.href = '/';
+                        });
+                    } else {
+                        throw new Error('登出失敗');
+                    }
+                } catch (error) {
+                    Swal.fire({
+                        title: '錯誤',
+                        text: error.message || '登出時發生問題',
+                        icon: 'error',
+                        confirmButtonText: '確定'
+                    });
+                }
+            });
+        });
+    </script>
 
-        <div class="content">
-          <p>於下方建立 OIDC Client，設定 Redirect URIs，並取得 Client ID 與 Client Secret。</p>
-          <ul>
-            <li>Auth URL：<span class="tag baseurl is-medium">/auth/login</span></li>
-            <li>Token URL：<span class="tag baseurl is-medium">/oidc/token</span></li>
-            <li>Certificate URL：<span class="tag baseurl is-medium">/oidc/jwks</span></li>
-          </ul>
+    <!-- Main Section -->
+    <section class="section is-flex-grow-1">
+        <div class="container">
+            <div class="box">
+                <h1 class="title is-3 mb-4 has-text-centered">OIDC Client 管理</h1>
+
+                <div class="content">
+                    <p>於下方建立 OIDC Client，設定 Redirect URIs，並取得 Client ID 與 Client Secret。</p>
+                    <ul>
+                        <li>Auth URL：<span class="tag baseurl is-medium">/auth/login</span></li>
+                        <li>Token URL：<span class="tag baseurl is-medium">/oidc/token</span></li>
+                        <li>Certificate URL：<span class="tag baseurl is-medium">/oidc/jwks</span></li>
+                    </ul>
+                </div>
+
+                <div class="has-text-right mb-3">
+                    <button id="addBtn" class="button is-primary is-medium has-text-white">新增 Client</button>
+                </div>
+
+                <div class="table-container">
+                    <table id="clientsTable" class="table is-striped is-fullwidth">
+                        <thead>
+                            <tr>
+                                <th>Client 名稱</th>
+                                <th>Client ID</th>
+                                <th>Client Secret</th>
+                                <th>Redirect URIs</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
         </div>
+    </section>
 
-        <div class="has-text-right mb-3">
-          <button id="addBtn" class="button is-primary is-medium has-text-white">新增 Client</button>
-        </div>
+    <!-- 主要邏輯 -->
+    <script>
+        (async () => {
+            try {
+                const response = await fetch('/api/auth/me');
+                if (!response.ok) throw new Error('Not authenticated');
+                const user = await response.json();
+                console.log('Logged in as:', user);
+            } catch (error) {
+                console.error('Authentication check failed, redirecting to /');
+                window.location.href = '/auth/login?redirect_uri=/dashboard';
+                return;
+            }
 
-        <div class="table-container">
-          <table id="clientsTable" class="table is-striped is-fullwidth">
-            <thead>
-              <tr>
-                <th>Client 名稱</th>
-                <th>Client ID</th>
-                <th>Client Secret</th>
-                <th>Redirect URIs</th>
-                <th>操作</th>
-              </tr>
-            </thead>
-          </table>
-        </div>
-      </div>
-    </div>
-  </section>
+            const baseUrl = window.location.origin;
+            document.querySelectorAll('.baseurl').forEach(el => {
+                el.textContent = baseUrl + el.textContent;
+            });
 
-  <!-- 主要邏輯 -->
-  <script>
-    (async () => {
-      try {
-        const response = await fetch('/api/auth/me');
-        if (!response.ok) throw new Error('Not authenticated');
-        const user = await response.json();
-        console.log('Logged in as:', user);
-      } catch (error) {
-        console.error('Authentication check failed, redirecting to /');
-        window.location.href = '/auth/login?redirect_uri=/dashboard';
-        return;
-      }
-
-      const baseUrl = window.location.origin;
-      document.querySelectorAll('.baseurl').forEach(el => {
-        el.textContent = baseUrl + el.textContent;
-      });
-    })();
-
-    // 初始化 DataTable
-    const table = new DataTable('#clientsTable', {
-      ajax: { url: '/api/clients', dataSrc: '' },
-      columns: [
-        { data: 'name' },
-        { data: 'client_id' },
-        { data: 'client_secret' },
-        { data: 'redirect_uris' },
-        {
-          data: null,
-          render: (data, type, row) => `
+            // 初始化 DataTable
+            const table = new DataTable('#clientsTable', {
+                ajax: { url: '/api/clients', dataSrc: '' },
+                columns: [
+                    { data: 'name' },
+                    { data: 'client_id' },
+                    { data: 'client_secret' },
+                    { data: 'redirect_uris' },
+                    {
+                        data: null,
+                        render: (data, type, row) => `
             <div class="buttons are-small">
               <button class="doedit button is-light" data-id="${row.id}">編輯</button>
               <button class="dodelete button is-light" data-id="${row.id}">刪除</button>
             </div>
           `
-        }
-      ],
-      paging: false,
-      searching: false,
-      info: false,
-      ordering: false,
-      language: {
-        url: 'https://cdn.datatables.net/plug-ins/2.0.3/i18n/zh-HANT.json'
-      }
-    });
+                    }
+                ],
+                paging: false,
+                searching: false,
+                info: false,
+                ordering: false,
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/2.0.3/i18n/zh-HANT.json'
+                }
+            });
 
-    // 新增 Client
-    document.getElementById('addBtn').addEventListener('click', async () => {
-      const { value: formValues } = await Swal.fire({
-        title: '新增 Client',
-        html: `
+        })();
+
+
+        // 新增 Client
+        document.getElementById('addBtn').addEventListener('click', async () => {
+            const { value: formValues } = await Swal.fire({
+                title: '新增 Client',
+                html: `
           <div style="text-align:left;">
             <div class="field">
               <label class="label">Client 名稱</label>
@@ -212,43 +214,43 @@ https://example.org/redirect" required></textarea>
               </div>
             </div>
           </div>`,
-        focusConfirm: false,
-        showCloseButton: true,
-        confirmButtonText: '新增',
-        preConfirm: () => ({
-          name: document.getElementById('swal-name').value.trim(),
-          redirect_uris: document.getElementById('swal-redirect_uris').value.trim()
-        })
-      });
+                focusConfirm: false,
+                showCloseButton: true,
+                confirmButtonText: '新增',
+                preConfirm: () => ({
+                    name: document.getElementById('swal-name').value.trim(),
+                    redirect_uris: document.getElementById('swal-redirect_uris').value.trim()
+                })
+            });
 
-      if (formValues) {
-        const res = await fetch('/api/clients', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formValues)
+            if (formValues) {
+                const res = await fetch('/api/clients', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formValues)
+                });
+                if (res.ok) {
+                    Swal.fire('成功', 'Client 已新增', 'success');
+                    table.ajax.reload();
+                } else {
+                    Swal.fire('錯誤', '新增失敗', 'error');
+                }
+            }
         });
-        if (res.ok) {
-          Swal.fire('成功', 'Client 已新增', 'success');
-          table.ajax.reload();
-        } else {
-          Swal.fire('錯誤', '新增失敗', 'error');
-        }
-      }
-    });
 
-    // 編輯與刪除事件
-    document.querySelector('#clientsTable tbody').addEventListener('click', async (e) => {
-      const id = e.target.dataset.id;
-      if (!id) return;
+        // 編輯與刪除事件
+        document.querySelector('#clientsTable tbody').addEventListener('click', async (e) => {
+            const id = e.target.dataset.id;
+            if (!id) return;
 
-      // 編輯
-      if (e.target.classList.contains('doedit')) {
-        const res = await fetch(`/api/clients/${id}`);
-        const client = await res.json();
+            // 編輯
+            if (e.target.classList.contains('doedit')) {
+                const res = await fetch(`/api/clients/${id}`);
+                const client = await res.json();
 
-        const { value: formValues } = await Swal.fire({
-          title: '編輯 Client',
-          html: `
+                const { value: formValues } = await Swal.fire({
+                    title: '編輯 Client',
+                    html: `
             <div style="text-align:left;">
               <div class="field">
                 <label class="label">Client 名稱</label>
@@ -263,51 +265,51 @@ https://example.org/redirect" required></textarea>
                 </div>
               </div>
             </div>`,
-          focusConfirm: false,
-          confirmButtonText: '更新',
-          preConfirm: () => ({
-            name: document.getElementById('swal-name').value.trim(),
-            redirect_uris: document.getElementById('swal-redirect_uris').value.trim()
-          })
-        });
+                    focusConfirm: false,
+                    confirmButtonText: '更新',
+                    preConfirm: () => ({
+                        name: document.getElementById('swal-name').value.trim(),
+                        redirect_uris: document.getElementById('swal-redirect_uris').value.trim()
+                    })
+                });
 
-        if (formValues) {
-          const update = await fetch(`/api/clients/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(formValues)
-          });
-          if (update.ok) {
-            Swal.fire('成功', 'Client 已更新', 'success');
-            table.ajax.reload();
-          } else {
-            Swal.fire('錯誤', '更新失敗', 'error');
-          }
-        }
-      }
+                if (formValues) {
+                    const update = await fetch(`/api/clients/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formValues)
+                    });
+                    if (update.ok) {
+                        Swal.fire('成功', 'Client 已更新', 'success');
+                        table.ajax.reload();
+                    } else {
+                        Swal.fire('錯誤', '更新失敗', 'error');
+                    }
+                }
+            }
 
-      // 刪除
-      if (e.target.classList.contains('dodelete')) {
-        const confirm = await Swal.fire({
-          title: '確認刪除？',
-          text: '此操作無法復原',
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonText: '刪除',
-          cancelButtonText: '取消'
+            // 刪除
+            if (e.target.classList.contains('dodelete')) {
+                const confirm = await Swal.fire({
+                    title: '確認刪除？',
+                    text: '此操作無法復原',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: '刪除',
+                    cancelButtonText: '取消'
+                });
+                if (confirm.isConfirmed) {
+                    const res = await fetch(`/api/clients/${id}`, { method: 'DELETE' });
+                    if (res.ok) {
+                        Swal.fire('已刪除', '', 'success');
+                        table.ajax.reload();
+                    } else {
+                        Swal.fire('錯誤', '刪除失敗', 'error');
+                    }
+                }
+            }
         });
-        if (confirm.isConfirmed) {
-          const res = await fetch(`/api/clients/${id}`, { method: 'DELETE' });
-          if (res.ok) {
-            Swal.fire('已刪除', '', 'success');
-            table.ajax.reload();
-          } else {
-            Swal.fire('錯誤', '刪除失敗', 'error');
-          }
-        }
-      }
-    });
-  </script>
+    </script>
 
 </body>
 
