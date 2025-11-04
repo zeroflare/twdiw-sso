@@ -52,7 +52,7 @@
                             </div>
 
                             <div class="field mt-5 has-text-centered">
-                                <button type="submit" id="generateBtn" class="button is-dark is-medium mr-3">
+                                <button type="button" id="sendBtn" class="button is-dark is-medium mr-3">
                                     寄送驗證碼
                                 </button>
                                 <button type="submit" id="generateBtn"
@@ -69,11 +69,55 @@
 
     <!-- JS 邏輯 -->
     <script>
+        document.getElementById('sendBtn').addEventListener('click', async () => {
+            const email = document.getElementById('email').value.trim();
+
+            if (!email) {
+                Swal.fire({
+                    title: '提醒',
+                    text: '請先輸入電子信箱再寄送驗證碼。',
+                    icon: 'warning',
+                    confirmButtonText: '確定'
+                });
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/auth/register/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || '寄送失敗，請稍後再試');
+                }
+
+                Swal.fire({
+                    title: '驗證碼已寄出 ✉️',
+                    text: '請前往電子信箱查看驗證碼。',
+                    icon: 'success',
+                    confirmButtonText: '確定',
+                    confirmButtonColor: '#4CAF50'
+                });
+            } catch (error) {
+                Swal.fire({
+                    title: '錯誤',
+                    text: error.message,
+                    icon: 'error',
+                    confirmButtonText: '確定',
+                    confirmButtonColor: '#e74c3c'
+                });
+            }
+        });
+
         document.getElementById('qrForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
             const name = document.getElementById('name').value.trim();
             const email = document.getElementById('email').value.trim();
+            const otp = document.getElementById('otp').value.trim();
 
             try {
                 const response = await fetch('/api/auth/register/qrcode', {
@@ -81,7 +125,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ name, email })
+                    body: JSON.stringify({ name, email, otp })
                 });
 
                 if (!response.ok) {
