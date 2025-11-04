@@ -230,7 +230,7 @@ export class AuthController {
       const mailgunUrl = `https://api.mailgun.net/v3/${domain}/messages`;
 
       const body = new URLSearchParams();
-      body.append("from", `數位憑證皮夾 OIDC <noreply@${domain}>`);
+      body.append("from", `數位憑證皮夾 單一登入<noreply@${domain}>`);
       body.append("to", email);
       body.append("subject", "您的電子信箱驗證碼");
       body.append(
